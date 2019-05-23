@@ -66,7 +66,7 @@ async function getCurrentThemeName(ctx){
 async function newTheme(ctx){
     let time = (new Date()).getTime();
     await themeCollection.updateOne({}, {$set:{"currentTheme": time}});
-    await themeCollection.updateOne({}, {$set:{["themes." + time]: {'name': 'newTheme', 'games': [], 'votes': {}, 'suggestionsOpen': false, 'votingOpen': false}}});
+    await themeCollection.updateOne({}, {$set:{["themes." + time]: {'name': ctx.request.body.themeName, 'games': [], 'votes': {}, 'suggestionsOpen': false, 'votingOpen': false}}});
     ctx.body = {status: true};
 }
 
@@ -92,7 +92,7 @@ async function vote(ctx){
 
 async function getVotes(ctx){
     var res = (await getCurrentThemeObject()).votes[ctx.request.body.user];
-    ctx.body = (res) ? res.votes : [];
+    ctx.body = (res) ? res : [];
 }
 
 async function getAllVotes(ctx){
@@ -111,7 +111,7 @@ async function calculateScores(){
     theme.games.forEach(game => {votes[game.name] = 0;});
     Object.values(theme.votes).forEach(userVotes => {
         Object.keys(userVotes).forEach(game => {
-            if(votes[game]) votes[game] += userVotes[game];
+            if(votes[game] !== undefined) votes[game] += userVotes[game];
         });
     });
     var results = [];
