@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Funkweb Spillprosjekt</title>
+    <link rel="stylesheet" href="appStyle.css">
+    <link rel="stylesheet" href="voteButtons.css">
+    <link rel="stylesheet" href="loginButtons.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- google sign-in -->
+    <!-- <meta name="google-signin-scope" content="profile email">
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script> -->
+</head>
+
+<body>
+    <div id="app" class="mainApp">
+
+        <div class="topBar"><h1>Spillprosjekt</h1></div>
+
+        <div></div>
+        <div class="themeName">{{themeName}}</div>
+        
+        <div class="mainContent">
+            <span class="tabMenu">
+                <button @click="curTab = 'gameList'" :class="{selected: curTab === 'gameList'}">Stem</button>
+                <button @click="curTab = 'results'" :class="{selected: curTab === 'results'}">Resultat</button>
+                <button @click="curTab = 'myGames'" :class="{selected: curTab === 'myGames'}">Mine forslag</button>
+                <button @click="curTab = 'theme'" :class="{selected: curTab === 'theme'}">Tema</button>
+            </span>
+            <div class="middleTab">
+                    
+                <div v-if="curTab === 'gameList'">
+                    <template v-for="(game, i) in gameList">
+                        <span class="voteButtons">
+                            <a :href="game.link"><img src="Link.png"></a>
+                            <span class="gameTitle">{{game.name}}</span>
+                            <button @click="vote(game.name, i, game.vote === 1 ? 0 : 1)" :class="{selected: game.vote === 1}">+</button>
+                        </span>
+                    </template>
+                </div>
+
+                <div v-if="curTab === 'results'">
+                    <button @click="getScores">Beregn resultat</button>
+                    <table v-if="gameScores !== false">
+                        <tr v-for="game in gameScores">
+                            <td>{{game.game}}:</td><td>{{game.votes}}</td>
+                        </tr>
+                    </table>
+                 </div>
+
+                <div v-if="curTab === 'myGames'" class="newGameMenu">
+                    <span style="text-align: center">Navn:</span>
+                    <input v-model="newGame.name">
+                    <button @click="addGame" style="grid-area: 1 / 3 / 3 / 4">Legg til</button>
+                    <span style="text-align: center">Link:</span>
+                    <input v-model="newGame.link">
+                    <template v-for="game in gameList.filter((e) => e.user === user.name)">
+                        <button @click="deleteGame(game.name)">Slett</button>
+                        <span style="grid-column-start: 2; grid-column-end: 4;">{{game.name}}</span>                 
+                    </template>
+                </div>
+
+                <div v-if="curTab === 'theme'">
+                    <button @click="newTheme">Nytt tema</button>
+                    <input v-model="newThemeName"> <br/><br/>
+                </div>
+            </div>
+        </div>
+
+        <div class="loginButtons">
+            <span v-if="loggedIn">
+                Bruker: {{user.name}}
+                <button @click="logout">Logout</button>
+            </span>
+            <span v-else> 
+                <form class="login" @submit.prevent="login">
+                    Brukernavn: <input type="text" name="username" placeholder="Brukernavn" v-model="user.name">
+                    Passord: <input type="password" name="password" placeholder="Passord" v-model="user.password">
+                    <button type="submit">Login</button>
+                </form>
+            </span>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

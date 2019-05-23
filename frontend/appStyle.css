@@ -1,0 +1,107 @@
+html body{
+    margin: 0px;
+    background-color: rgb(11, 32, 54);
+    color: rgb(236, 243, 255);
+}
+
+.mainApp{
+    display: grid;
+    grid-template-rows: 7% auto auto 1fr;
+    grid-template-columns: 20% auto 20%;
+    height: 100vh;
+}
+
+h1{text-align: center; font-size: 42px;}
+
+button:focus {outline:0;}
+button {
+    color: inherit;
+    font-size: inherit;
+    background: transparent;
+    border: none;
+}
+button:hover {background: rgba(255, 255, 255, 0.295)}
+
+.themeName {
+    grid-area: 2 / 1 / 3 / 4;
+    margin: 20px auto;
+    width: auto;
+    font-size: 46px;
+    font-weight: bolder;
+    text-align: center;
+}
+
+.themeName input{
+    font-size: inherit;
+    font-weight: inherit;
+    background-color: transparent;
+    text-align: inherit;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+}
+
+.mainContent input:focus{outline: none;}
+
+.mainContent{
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    min-width: 500px;
+    margin: 0px auto;
+    font-size: 20px;
+}
+
+.tabMenu{margin: auto}
+.tabMenu button{
+    border: none;
+    padding: 8px 16px 4px 16px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    background-color: rgb(24, 59, 95);
+}
+
+.topBar{
+    grid-area: 1 / 1 / 2 / 4;
+    display: grid;
+    align-content: center;
+}
+
+.middleTab{   
+     border-radius: 5px;
+     min-width: 500px;
+     min-height: 150px;
+     margin: 0px auto;
+     padding: 5px;
+}
+
+.topBar, .middleTab, .tabMenu button:hover, .tabMenu button.selected{
+    background-color: rgb(57, 95, 133);
+}
+
+.newGameMenu{
+    padding-top: 10px;
+    row-gap: 5px;
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: auto auto auto;
+}
+
+
+
+.addGameTab {
+    padding-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
+    row-gap: 10px;
+    column-gap: 10px;
+}
+
+.addGameTab button{
+    padding: 8px 0px;
+    border: none;
+    background: transparent;
+}
+
+.addGameTab button:hover{background: rgba(255, 255, 255, 0.3);}
+.centerText {text-align: center;}

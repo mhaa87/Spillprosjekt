@@ -1,0 +1,24 @@
+.loginButtons{
+    grid-area: 1 / 3 / 2 / 4;
+    display: flex;
+    flex-direction: row-reverse;
+    margin: auto;
+    z-index: 2;
+}
+
+.loginButtons input{
+    margin-left: 10px;
+    width: 8em;
+}
+
+.loginButtons button{background-color: transparent; border: none;}
+.loginButtons button:hover{background-color: rgb(24, 59, 95);}
+
+.login{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: 50% 50%;
+}
+.login button{ grid-area: 1 / 3 / 3 / 4;}
+.loginMenu{grid-area: 2 / 3 / 3 / 4;}
+.centerText {text-align: center;}
