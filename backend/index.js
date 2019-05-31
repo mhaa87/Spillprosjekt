@@ -12,18 +12,23 @@ const router = new Router();
 const dbName = "Spillprosjekt";
 var databaseConnected = false;
 var userCollection;
-var themeCollection;
+var currentVote;
+var votingCollection;
 
 app.use(logger());
 app.use(cors());
 app.use(BodyParser());
 
 router.use("/", checkConnection);
-router.post("/newTheme", newTheme);
-router.post("/getGames", getGames);
-router.post("/addGame", addGame);
-router.post("/deleteGame", deleteGame);
-router.post("/getCurrentTheme", getCurrentThemeName);
+router.post("/newVote", newVote);
+router.post("/updateVote", updateVote);
+router.post("/getCurrentVote", getCurrentVote);
+router.post("/getVoteData", getVoteData);
+router.post("/getItems", getItems);
+router.post("/addItem", addItem);
+router.post("/deleteItem", deleteItem);
+router.post("/getVoteTitle", getVoteTitle);
+router.post("/getVoteDuration", getVoteDuration);
 router.post("/login", login);
 router.post("/vote", vote);
 router.post("/getVotes", getVotes);
@@ -33,7 +38,8 @@ async function checkConnection(ctx, next){
     if(databaseConnected){await next(); return};
     await client.connect().then(async function(){
         userCollection = await client.db(dbName).collection("Brukere");
-        themeCollection = await client.db(dbName).collection("Themes");
+        currentVote = await client.db(dbName).collection("SisteAvstemning");
+        votingCollection = await client.db(dbName).collection("Avstemninger");
         databaseConnected = true;
         await next();
     }).catch((err) => {ctx.body = {status: false, msg: "Database connection error"};});
@@ -51,73 +57,102 @@ async function login(ctx){
     ctx.body = user;
 }
 
-async function getCurrentThemeID(){return (await themeCollection.findOne({})).currentTheme};
+async function getCurrentVote(ctx){ctx.body = (await currentVote.findOne({})).date;};
 
-async function getCurrentThemeObject(){
-    let themesObj = await themeCollection.findOne({});
-    return themesObj.themes[themesObj.currentTheme];
+async function getVoteData(ctx){
+    var data = await votingCollection.findOne({date: ctx.request.body.date});
+    data.votes = {};
+    ctx.body = data;
 }
 
-async function getCurrentThemeName(ctx){
-    let themesObj = await themeCollection.findOne({});
-    ctx.body = themesObj.themes[themesObj.currentTheme].name;
-}
+async function getVoteTitle(ctx){ctx.body = (await votingCollection.findOne({date: ctx.request.body.date})).title;}
+async function getVoteDuration(date){return (await votingCollection.findOne({'date': ctx.request.body.date})).voteDuration;}
 
-async function newTheme(ctx){
+async function newVote(ctx){
     let time = (new Date()).getTime();
-    await themeCollection.updateOne({}, {$set:{"currentTheme": time}});
-    await themeCollection.updateOne({}, {$set:{["themes." + time]: {'name': ctx.request.body.themeName, 'games': [], 'votes': {}, 'suggestionsOpen': false, 'votingOpen': false}}});
-    ctx.body = {status: true};
-}
-
-async function addGame(ctx){
-    await themeCollection.updateOne({}, {
-        $push: {['themes.' + (await getCurrentThemeID()) + '.games']: ctx.request.body}
+    await currentVote.updateOne({}, {$set:{"date": time}});
+    await votingCollection.insertOne({
+        'date' : time,
+        'title': ctx.request.body.title, 
+        'items': [], 
+        'votes': {}, 
+        'suggestionsCloses': ctx.request.body.suggestionsCloses,
+        'votingCloses': ctx.request.body.votingCloses,
     });
     ctx.body = {status: true};
 }
 
-async function deleteGame(ctx){
-    var res = await themeCollection.updateOne({}, {$pull: {['themes.' + (await getCurrentThemeID()) + '.games']: {'name': ctx.request.body.name}}});
-    if(!res.acknowledged){ctx.body = {status: false, msg: "error deleting document"} ;return};
+async function updateVote(ctx){
+    await votingCollection.updateOne({'date': ctx.request.body.date}, {$set:{
+        'title': ctx.request.body.data.title,
+        'suggestionsCloses': ctx.request.body.data.suggestionsCloses,
+        'votingCloses': ctx.request.body.data.votingCloses
+    }});
+    ctx.body = {status: true};
 }
 
-async function getGames(ctx){ctx.body = (await getCurrentThemeObject()).games;}
+async function addItem(ctx){
+    if(!(await suggestionsOpen(ctx.request.body.date))) {ctx.body = {status: false}; return}
+    await votingCollection.updateOne({date: ctx.request.body.date}, {
+        $push: {'items': ctx.request.body.item}
+    });
+    ctx.body = {status: true};
+}
+
+async function deleteItem(ctx){
+    if(!(await suggestionsOpen(ctx.request.body.date))) {ctx.body = {status: false}; return}
+    var res = await votingCollection.updateOne({date: ctx.request.body.date}, {
+        $pull: {items: {'name': ctx.request.body.name}}
+    });
+    if(!res.acknowledged){ctx.body = {status: false, msg: "error deleting document"};return};
+}
+
+async function getItems(ctx){ctx.body = (await votingCollection.findOne({'date': ctx.request.body.date})).items;}
 
 async function vote(ctx){
-    ctx.body = await themeCollection.updateOne({}, {
-        $set:{['themes.' + (await getCurrentThemeID()) + '.votes.' + ctx.request.body.user + "." + ctx.request.body.game]: ctx.request.body.vote}
+    if(!(await votingOpen(ctx.request.body.date))) {ctx.body = {status: false}; return}
+    ctx.body = await votingCollection.updateOne({date: ctx.request.body.date}, {
+        $set:{['votes.' + ctx.request.body.user + "." + ctx.request.body.item]: ctx.request.body.vote}
     });
 }
 
 async function getVotes(ctx){
-    var res = (await getCurrentThemeObject()).votes[ctx.request.body.user];
+    var res = (await votingCollection.findOne({date: ctx.request.body.date})).votes[ctx.request.body.user];
     ctx.body = (res) ? res : [];
 }
 
-async function getAllVotes(ctx){
-    var allVotes = {};
-    await userCollection.findMany({}).toArray().forEach(user => {
-        allVotes[user.name] = user.votes;
-    });
-    ctx.body = allVotes;
-}
+async function getScores(ctx){ctx.body = await calculateScores(ctx.request.body.date);}
 
-async function getScores(ctx){ctx.body = await calculateScores();}
-
-async function calculateScores(){
-    let theme = await getCurrentThemeObject();
+async function calculateScores(date){
+    let voting = await votingCollection.findOne({'date': date});
     var votes = {};
-    theme.games.forEach(game => {votes[game.name] = 0;});
-    Object.values(theme.votes).forEach(userVotes => {
-        Object.keys(userVotes).forEach(game => {
-            if(votes[game] !== undefined) votes[game] += userVotes[game];
+    voting.items.forEach(item => {votes[item.name] = 0;});
+    Object.values(voting.votes).forEach(userVotes => {
+        Object.keys(userVotes).forEach(item => {
+            if(votes[item] !== undefined) votes[item] += userVotes[item];
         });
     });
     var results = [];
-    Object.keys(votes).forEach(game => results.push({"game": game, "votes": votes[game]}));
+    Object.keys(votes).forEach(item => results.push({"name": item, "votes": votes[item]}));
     results.sort((a, b) => {return b.votes - a.votes});
     return results;
+}
+
+async function suggestionsOpen(date){
+    return (new Date().getTime()) < parseDateString((await votingCollection.findOne({'date': date})).suggestionsCloses);
+}
+
+async function votingOpen(date){
+    return (new Date().getTime()) < parseDateString((await votingCollection.findOne({'date': date})).votingCloses);
+}
+
+function parseDateString(closeDate){
+    var year = closeDate.date.substring(0, 4);
+    var month = closeDate.date.substring(5, 7);
+    var day = closeDate.date.substring(8, 10);
+    var hours = closeDate.time.substring(0, 2);
+    var minutes = closeDate.time.substring(3, 5);
+    return (new Date(year, (month-1), day, hours, minutes, 0, 0)).getTime();
 }
 
 app.use(router.routes()).use(router.allowedMethods());
