@@ -1,7 +1,9 @@
 html body{
     margin: 0px;
-    background-color: rgb(11, 32, 54);
-    color: rgb(236, 243, 255);
+    background-color: white;
+    /* background-image: url("https://cdn.pixabay.com/photo/2015/12/01/15/43/black-1072366_960_720.jpg"); */
+    /* color: #41a62a; */
+    color: white;
 }
 
 .mainApp{
@@ -15,12 +17,18 @@ h1{text-align: center; font-size: 42px;}
 
 button:focus {outline:0;}
 button {
-    color: inherit;
+    padding: 8px 16px 4px 16px;
+    color: white;
     font-size: inherit;
-    background: transparent;
+    background: black;
     border: none;
 }
-button:hover {background: rgba(255, 255, 255, 0.295)}
+
+button:hover {color: white; background: #41a62a;}
+button.selected:hover{color: white;}
+button.selected{color: #41a62a;}
+button:active{box-shadow: inset 3px 3px 3px 0px rgba(0,0,0,0.75);}
+
 
 .themeName {
     grid-area: 2 / 1 / 3 / 4;
@@ -29,6 +37,7 @@ button:hover {background: rgba(255, 255, 255, 0.295)}
     font-size: 46px;
     font-weight: bolder;
     text-align: center;
+    color: black;
 }
 
 .themeName input{
@@ -51,32 +60,46 @@ button:hover {background: rgba(255, 255, 255, 0.295)}
     font-size: 20px;
 }
 
-.tabMenu{margin: auto}
+.tabMenu{
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    box-sizing: border-box;
+    padding: 0px 10px;
+    margin: auto
+}
 .tabMenu button{
-    border: none;
+    /* border: none;
     padding: 8px 16px 4px 16px;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
-    background-color: rgb(24, 59, 95);
+    border: solid 3px #41a62a;
+    border-bottom: none; */
 }
 
 .topBar{
     grid-area: 1 / 1 / 2 / 4;
     display: grid;
     align-content: center;
+    border-bottom: solid 3px #41a62a;
 }
 
 .middleTab{   
      border-radius: 5px;
-     min-width: 500px;
+     width: 100%;
+     box-sizing: border-box;
      min-height: 150px;
      margin: 0px auto;
-     padding: 5px;
+     padding: 12px;
+     /* border: solid 3px #41a62a; */
 }
 
-.topBar, .middleTab, .tabMenu button:hover, .tabMenu button.selected{
-    background-color: rgb(57, 95, 133);
+.newVoteTab{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    row-gap: 5px;
 }
+
+.topBar, .middleTab{background-color: black;}
 
 .newGameMenu{
     padding-top: 10px;

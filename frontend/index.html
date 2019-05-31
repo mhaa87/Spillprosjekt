@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Funkweb Spillprosjekt</title>
+    <title>Funkweb Avstemning</title>
     <link rel="stylesheet" href="appStyle.css">
     <link rel="stylesheet" href="voteButtons.css">
     <link rel="stylesheet" href="loginButtons.css">
@@ -18,54 +18,66 @@
 <body>
     <div id="app" class="mainApp">
 
-        <div class="topBar"><h1>Spillprosjekt</h1></div>
+        <div class="topBar"><h1>Avstemning for spillgruppa</h1></div>
 
         <div></div>
-        <div class="themeName">{{themeName}}</div>
+        <div class="themeName">{{title}}</div>
         
         <div class="mainContent">
+            
             <span class="tabMenu">
-                <button @click="curTab = 'gameList'" :class="{selected: curTab === 'gameList'}">Stem</button>
+                <button @click="curTab = 'itemList'" :class="{selected: curTab === 'itemList'}">Stem</button>
                 <button @click="curTab = 'results'" :class="{selected: curTab === 'results'}">Resultat</button>
-                <button @click="curTab = 'myGames'" :class="{selected: curTab === 'myGames'}">Mine forslag</button>
-                <button @click="curTab = 'theme'" :class="{selected: curTab === 'theme'}">Tema</button>
+                <button @click="curTab = 'myItems'" :class="{selected: curTab === 'myItems'}">Mine forslag</button>
+                <button @click="curTab = 'newVote'" :class="{selected: curTab === 'newVote'}">Avstemning</button>
             </span>
-            <div class="middleTab">
-                    
-                <div v-if="curTab === 'gameList'">
-                    <template v-for="(game, i) in gameList">
+
+            <div class="middleTab">        
+                <div v-if="curTab === 'itemList'">  
+                    {{votingTimeLeft}}             
+                    <template v-for="(item, i) in itemList">
                         <span class="voteButtons">
-                            <a :href="game.link"><img src="Link.png"></a>
-                            <span class="gameTitle">{{game.name}}</span>
-                            <button @click="vote(game.name, i, game.vote === 1 ? 0 : 1)" :class="{selected: game.vote === 1}">+</button>
+                            <a :href="item.link"><img src="Link.png"></a>
+                            <span class="gameTitle">{{item.name}}</span>
+                            <button @click="vote(item.name, i, item.vote === 1 ? 0 : 1)" :class="{selected: item.vote === 1}">+</button>
                         </span>
                     </template>
                 </div>
 
-                <div v-if="curTab === 'results'">
+                <div v-if="curTab === 'results'">                
                     <button @click="getScores">Beregn resultat</button>
-                    <table v-if="gameScores !== false">
-                        <tr v-for="game in gameScores">
-                            <td>{{game.game}}:</td><td>{{game.votes}}</td>
+                    <table v-if="itemScores !== false">
+                        <tr v-for="item in itemScores">
+                            <td>{{item.name}}:</td><td>{{item.votes}}</td>
                         </tr>
                     </table>
                  </div>
 
-                <div v-if="curTab === 'myGames'" class="newGameMenu">
+                <div v-if="curTab === 'myItems'">
+                    {{suggestionsTimeLeft}}
+                    <div class="newGameMenu">
                     <span style="text-align: center">Navn:</span>
-                    <input v-model="newGame.name">
-                    <button @click="addGame" style="grid-area: 1 / 3 / 3 / 4">Legg til</button>
+                    <input v-model="newItem.name">
+                    <button @click="addItem" style="grid-area: 1 / 3 / 3 / 4">Legg til</button>
                     <span style="text-align: center">Link:</span>
-                    <input v-model="newGame.link">
-                    <template v-for="game in gameList.filter((e) => e.user === user.name)">
-                        <button @click="deleteGame(game.name)">Slett</button>
-                        <span style="grid-column-start: 2; grid-column-end: 4;">{{game.name}}</span>                 
+                    <input v-model="newItem.link">
+                    <template v-for="item in itemList.filter((e) => e.user === user.name)">
+                        <button @click="deleteItem(item.name)">Slett</button>
+                        <span style="grid-column-start: 2; grid-column-end: 4;">{{item.name}}</span>                 
                     </template>
+                    </div>
                 </div>
 
-                <div v-if="curTab === 'theme'">
-                    <button @click="newTheme">Nytt tema</button>
-                    <input v-model="newThemeName"> <br/><br/>
+                <div v-if="curTab === 'newVote'" class="newVoteTab">               
+                    Tittel: <input v-model="newVote.title"><span></span>
+                    Forslag stenger: 
+                    <input type="date" v-model="newVote.suggestionsCloses.date">
+                    <input type="time" v-model="newVote.suggestionsCloses.time">
+                    Avstemning stenger: 
+                    <input type="date" v-model="newVote.votingCloses.date">
+                    <input type="time" v-model="newVote.votingCloses.time">
+                    <button @click="updateVote">Lagre endringer</button>
+                    <button @click="createNewVote">Ny avstemning</button>
                 </div>
             </div>
         </div>
